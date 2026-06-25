@@ -17,10 +17,11 @@ import (
 
 type CLI struct {
 	Globals
-	Model    ModelCmd    `cmd:"" help:"Manage AI models."`
-	Endpoint EndpointCmd `cmd:"" help:"Manage AI model endpoints."`
-	AI       AICmd       `cmd:"" name:"ai" help:"Call Seek DB AI functions."`
-	SQL      SQLCmd      `cmd:"" name:"sql" help:"Execute raw SQL."`
+	Model    ModelCmd      `cmd:"" help:"Manage AI models."`
+	Endpoint EndpointCmd   `cmd:"" help:"Manage AI model endpoints."`
+	AI       AICmd         `cmd:"" name:"ai" help:"Call Seek DB AI functions."`
+	SQL      SQLCmd        `cmd:"" name:"sql" help:"Execute raw SQL."`
+	Complete CompletionCmd `cmd:"" name:"completion" help:"Generate shell completion scripts."`
 }
 
 type ModelCmd struct {

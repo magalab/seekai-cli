@@ -153,6 +153,24 @@ seekai -o toml ai complete ob_complete "Hello" --pipe
 
 TOML 输出会把列表包装到 `rows` 字段下，把标量值包装到 `value` 字段下，因为 TOML 文档需要具名字段。
 
+## Shell 补全
+
+使用以下命令生成 shell completion 脚本：
+
+```sh
+seekai completion bash
+seekai completion zsh
+seekai completion fish
+```
+
+安装示例：
+
+```sh
+seekai completion bash > /usr/local/etc/bash_completion.d/seekai
+seekai completion zsh > "${fpath[1]}/_seekai"
+seekai completion fish > ~/.config/fish/completions/seekai.fish
+```
+
 ## 发布
 
 推送 `vX.Y.Z` 格式的 tag 会触发 release workflow，并发布以下平台的二进制文件：

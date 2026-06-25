@@ -153,6 +153,24 @@ seekai -o toml ai complete ob_complete "Hello" --pipe
 
 TOML output wraps lists under `rows` and scalar values under `value`, because TOML requires a document with keys.
 
+## Shell Completion
+
+Generate shell completion scripts with:
+
+```sh
+seekai completion bash
+seekai completion zsh
+seekai completion fish
+```
+
+Example setup:
+
+```sh
+seekai completion bash > /usr/local/etc/bash_completion.d/seekai
+seekai completion zsh > "${fpath[1]}/_seekai"
+seekai completion fish > ~/.config/fish/completions/seekai.fish
+```
+
 ## Release
 
 Pushing a tag named `vX.Y.Z` runs the release workflow and publishes binaries for:
