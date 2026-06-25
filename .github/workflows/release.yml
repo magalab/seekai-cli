@@ -1,0 +1,188 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS amd64
+            goos: darwin
+            goarch: amd64
+            ext: ""
+          - name: macOS arm64
+            goos: darwin
+            goarch: arm64
+            ext: ""
+          - name: Linux amd64
+            goos: linux
+            goarch: amd64
+            ext: ""
+          - name: Linux arm64
+            goos: linux
+            goarch: arm64
+            ext: ""
+          - name: Windows amd64
+            goos: windows
+            goarch: amd64
+            ext: ".exe"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22.x"
+          cache: true
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME}"
+          else
+            version="dev-${GITHUB_SHA::7}"
+          fi
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build
+        shell: bash
+        env:
+          CGO_ENABLED: "0"
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          VERSION: ${{ steps.version.outputs.version }}
+          OUT_DIR: dist
+          BINARY_NAME: seekai_${{ matrix.goos }}_${{ matrix.goarch }}${{ matrix.ext }}
+        run: scripts/build-release.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: seekai-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/seekai_${{ matrix.goos }}_${{ matrix.goarch }}${{ matrix.ext }}
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Prepare binaries
+        run: chmod +x artifacts/seekai_darwin_* artifacts/seekai_linux_*
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" artifacts/* \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes
+
+  homebrew:
+    name: Update Homebrew Tap
+    if: github.ref_type == 'tag'
+    needs: release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p release-assets
+          gh release download "${GITHUB_REF_NAME}" \
+            --repo magalab/seekai-cli \
+            --pattern "seekai_darwin_*" \
+            --dir release-assets
+
+      - name: Compute checksums
+        id: checksums
+        shell: bash
+        run: |
+          echo "amd64=$(sha256sum release-assets/seekai_darwin_amd64 | awk '{print $1}')" >> "${GITHUB_OUTPUT}"
+          echo "arm64=$(sha256sum release-assets/seekai_darwin_arm64 | awk '{print $1}')" >> "${GITHUB_OUTPUT}"
+          echo "version=${GITHUB_REF_NAME#v}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout tap
+        uses: actions/checkout@v4
+        with:
+          repository: magalab/tap
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: tap
+
+      - name: Update formula
+        shell: bash
+        run: |
+          mkdir -p tap/Formula
+          cat > tap/Formula/seekai.rb <<'RUBY'
+          class Seekai < Formula
+            desc "Seek DB AI model, endpoint, and AI function CLI"
+            homepage "https://github.com/magalab/seekai-cli"
+            version "__VERSION__"
+
+            on_macos do
+              on_arm do
+                url "https://github.com/magalab/seekai-cli/releases/download/__TAG__/seekai_darwin_arm64",
+                    using: :nounzip
+                sha256 "__ARM64_SHA256__"
+              end
+
+              on_intel do
+                url "https://github.com/magalab/seekai-cli/releases/download/__TAG__/seekai_darwin_amd64",
+                    using: :nounzip
+                sha256 "__AMD64_SHA256__"
+              end
+            end
+
+            def install
+              bin.install cached_download => "seekai"
+            end
+
+            test do
+              assert_match "Usage: seekai", shell_output("#{bin}/seekai --help")
+            end
+          end
+          RUBY
+          sed -i \
+            -e "s/__VERSION__/${{ steps.checksums.outputs.version }}/g" \
+            -e "s/__TAG__/${GITHUB_REF_NAME}/g" \
+            -e "s/__ARM64_SHA256__/${{ steps.checksums.outputs.arm64 }}/g" \
+            -e "s/__AMD64_SHA256__/${{ steps.checksums.outputs.amd64 }}/g" \
+            tap/Formula/seekai.rb
+
+      - name: Commit formula
+        working-directory: tap
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/seekai.rb
+          if git diff --cached --quiet; then
+            echo "Formula already up to date"
+            exit 0
+          fi
+          git commit -m "seekai ${GITHUB_REF_NAME}"
+          git push

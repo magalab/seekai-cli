@@ -1,0 +1,29 @@
+# Build outputs
+/dist/
+/build/
+/seekai
+/seekai-cli
+/seekai.exe
+
+# Test and coverage outputs
+/coverage.out
+/coverage.html
+*.test
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# temp
+temp
+tmp
