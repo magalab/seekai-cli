@@ -40,7 +40,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -127,7 +127,7 @@ jobs:
           echo "version=${GITHUB_REF_NAME#v}" >> "${GITHUB_OUTPUT}"
 
       - name: Checkout tap
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: magalab/tap
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
