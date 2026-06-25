@@ -98,6 +98,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "${GITHUB_REF_NAME}" artifacts/* \
+            --repo "${GITHUB_REPOSITORY}" \
             --title "${GITHUB_REF_NAME}" \
             --generate-notes
 
@@ -114,7 +115,7 @@ jobs:
         run: |
           mkdir -p release-assets
           gh release download "${GITHUB_REF_NAME}" \
-            --repo magalab/seekai-cli \
+            --repo "${GITHUB_REPOSITORY}" \
             --pattern "seekai_darwin_*" \
             --dir release-assets
 
@@ -140,18 +141,18 @@ jobs:
           cat > tap/Formula/seekai.rb <<'RUBY'
           class Seekai < Formula
             desc "Seek DB AI model, endpoint, and AI function CLI"
-            homepage "https://github.com/magalab/seekai-cli"
+            homepage "https://github.com/${{ github.repository }}"
             version "__VERSION__"
 
             on_macos do
               on_arm do
-                url "https://github.com/magalab/seekai-cli/releases/download/__TAG__/seekai_darwin_arm64",
+                url "https://github.com/${{ github.repository }}/releases/download/__TAG__/seekai_darwin_arm64",
                     using: :nounzip
                 sha256 "__ARM64_SHA256__"
               end
 
               on_intel do
-                url "https://github.com/magalab/seekai-cli/releases/download/__TAG__/seekai_darwin_amd64",
+                url "https://github.com/${{ github.repository }}/releases/download/__TAG__/seekai_darwin_amd64",
                     using: :nounzip
                 sha256 "__AMD64_SHA256__"
               end
