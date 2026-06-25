@@ -163,4 +163,4 @@ Pushing a tag named `vX.Y.Z` runs the release workflow and publishes binaries fo
 - `seekai_linux_arm64`
 - `seekai_windows_amd64.exe`
 
-On tag releases, the workflow also updates the macOS Homebrew formula in `magalab/tap`. Configure a repository secret named `HOMEBREW_TAP_TOKEN` with write access to `magalab/tap`.
+On tag releases, the workflow also updates the macOS Homebrew formula in the `magalab/homebrew-tap` repository, which users consume as `brew tap magalab/tap`. Configure a repository secret named `HOMEBREW_TAP_TOKEN` with write access to `magalab/homebrew-tap`.

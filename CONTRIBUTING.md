@@ -38,4 +38,4 @@ Create a tag named `vX.Y.Z` and push it. GitHub Actions will build release artif
 - `seekai_linux_arm64`
 - `seekai_windows_amd64.exe`
 
-Tag releases also update the macOS Homebrew formula in `magalab/tap`. The repository must have a `HOMEBREW_TAP_TOKEN` secret with write access to that tap.
+Tag releases also update the macOS Homebrew formula in `magalab/homebrew-tap`, which users install as `brew tap magalab/tap`. The repository must have a `HOMEBREW_TAP_TOKEN` secret with write access to that tap repository.

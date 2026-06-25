@@ -130,7 +130,7 @@ jobs:
       - name: Checkout tap
         uses: actions/checkout@v7
         with:
-          repository: magalab/tap
+          repository: magalab/homebrew-tap
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           path: tap
 

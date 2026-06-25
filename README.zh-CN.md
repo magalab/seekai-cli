@@ -163,4 +163,4 @@ TOML 输出会把列表包装到 `rows` 字段下，把标量值包装到 `value
 - `seekai_linux_arm64`
 - `seekai_windows_amd64.exe`
 
-tag release 时，workflow 还会更新 `magalab/tap` 中的 macOS Homebrew formula。需要在本仓库配置名为 `HOMEBREW_TAP_TOKEN` 的 secret，并授予它写入 `magalab/tap` 的权限。
+tag release 时，workflow 还会更新 `magalab/homebrew-tap` 仓库中的 macOS Homebrew formula，用户侧仍通过 `brew tap magalab/tap` 使用。需要在本仓库配置名为 `HOMEBREW_TAP_TOKEN` 的 secret，并授予它写入 `magalab/homebrew-tap` 的权限。
